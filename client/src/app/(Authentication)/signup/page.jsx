@@ -1,6 +1,5 @@
 "use client";
 import { auth } from '../../firebase';
-import { db } from '../../firebase';
 import { useState } from 'react';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { signInWithEmailAndPassword } from "firebase/auth";
@@ -8,7 +7,7 @@ import { useRouter } from 'next/router'
 
 import axios from 'axios';
 
-const Login = () => {
+const Signup = () => {
     const [user,userLoading,erro] = useAuthState(auth);
     
     const [email, setEmail] = useState('');
@@ -55,24 +54,12 @@ const Login = () => {
             });
     };
     
-    const handleLogout = async () => {
-        try {
-        await auth.signOut();
-        } catch (error) {
-        setError(error.message);
-        }
-    };
-    
     return (
-        <div className="login">
+        <div className="flex flex-col w-60">
         <h1>Expense Log</h1>
-        {user ? (
-            <>
-            <button onClick={handleLogout}>Logout</button>
-            <h2>Welcome {user.email}</h2>
-            </>
-        ) : (
-            <form onSubmit={handleSubmit}>
+        
+            <form onSubmit={handleSubmit}
+                    className="flex flex-col">
             <input
                 type="email"
                 placeholder="Email"
@@ -85,18 +72,18 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
             />
-            <button type="submit" disabled={loading}>
-                Login
-            </button>
 
             <input type="text"
                    placeholder="username" value={username}
                    onChange={(e) => setUsername(e.target.value)}/>
+            <button type="submit" disabled={loading}>
+                Signup
+            </button>
             {error && <p>{error}</p>}
+            <a className="text-blue-300" href="/login">Already have an account?</a>
             </form>
-        )}
         </div>
     );
     }
 
-export default Login;
+export default Signup;
