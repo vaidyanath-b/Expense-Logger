@@ -70,7 +70,7 @@ export default function SignupBox () {
                  <div className="flex font-poppins gap-4 items-center">
                     <label className=" font-[400] drop-shadow-lg w-[8rem] ">Username</label>
                     <input  
-                    type="email"
+                    type="text"
                     placeholder="Enter your Username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}

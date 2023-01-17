@@ -1,5 +1,5 @@
 import Hey from './left.jsx'
-import Home from '../../Right'
+import Home from './Right'
 
 export default function Page() {
     return (
