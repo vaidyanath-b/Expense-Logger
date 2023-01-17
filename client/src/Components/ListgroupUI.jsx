@@ -4,7 +4,7 @@ export const ListgroupUI = ({ items }) => {
   return (
     <div className="flex justify-center flex-col bg-white py-5 rounded-t-xl">
       <div className="title ">
-        <h1 className="text-2xl text-black p-2 font-semibold">Recent Expenses</h1>
+        <h1 className="text-2xl text-white p-2 px-5 font-semibold">Recent Expenses</h1>
       </div>
       <ul className="bg-white rounded-lg border border-gray-200 w-full text-gray-900">
         {items.map((item) => (
@@ -20,18 +20,18 @@ export const ListgroupUI = ({ items }) => {
                   />
                   <div className="flex flex-col">
                     <h1 className="text-lg font-semibold">{item.name}</h1>
-                    <p className="text-sm text-slate-700">
+                    <p className="text-sm text-slate-300">
                       {new Date(item.date * 1000).toUTCString().split(" ").join(" ").split(" ").slice(1, 4).join(" ") }
                     </p>
                   </div>
                 </div>
               </div>
               <div className="basis-1/2">
-                <div className="flex flex-col  justify-end">
-                  <p className="text-xl font-semibold">₹{item.budget}</p>
-                  <p className="text-sm">
+                <div className="flex flex-col flex-end justify-end">
+                  <p className="text-xl font-semibold flex-end text-right">-₹{item.budget}</p>
+                  {/* <p className="text-sm">
                     {(item.budget / 1000) * 100}% of monthly budget spent
-                  </p>
+                  </p> */}
                 </div>
               </div>
             </div>
