@@ -1,5 +1,11 @@
+'use client';
 import './global.css'
+import { useRouter } from 'next/navigation'
 export default function RootLayout({ children }) {
+
+  const router = useRouter();
+  router.replace('/login');
+
   return (
     <html>
       <head>
