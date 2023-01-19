@@ -1,6 +1,7 @@
 
 import { ListgroupUI } from "@/Components/ListgroupUI";
 import TotalBalanceCard from "@/Components/TotalBalanceCard";
+import Logs from "./Logs";
 
 export default function Home() {
  const items = [
@@ -31,10 +32,9 @@ export default function Home() {
  ];
 
   return (
-    <div className="py-5 bg-black">
-      <TotalBalanceCard/>
-  
-  
+    <div className="flex flex-col overflow-auto sm:p-4 md:p-3 border-x-2 m-1 font-poppins">
+      <Logs />
+      {/* <TotalBalanceCard/> */}
       <ListgroupUI items={items} />
     </div>
   );

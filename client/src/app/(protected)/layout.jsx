@@ -3,6 +3,7 @@ import {auth} from '../firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useEffect } from 'react';
 import {useRouter} from 'next/navigation';
+import NavBar from "@/components/NavBar";
 export default function RootLayout({ children }) {
 
     const router = useRouter();
@@ -13,19 +14,12 @@ export default function RootLayout({ children }) {
       
     },[user,loading])
 
-    
+    if(loading || !user) return <h1>loading in</h1>
     return (
           <div>
-            <aside>
-              <button 
-              className='bg-blue-500'
-              onClick={(e)=>{
-                auth.signOut();
-                router.push('/login')
-              }}>Logout</button>
-            </aside>
-            {(loading || !user) ? <h1>loading in</h1> : children}
-            </div>
+            <NavBar />
+            { children}
+          </div>
     )
   }
   

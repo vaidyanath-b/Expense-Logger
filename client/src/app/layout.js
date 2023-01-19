@@ -3,9 +3,6 @@ import './global.css'
 import { useRouter } from 'next/navigation'
 export default function RootLayout({ children }) {
 
-  const router = useRouter();
-  router.replace('/login');
-
   return (
     <html>
       <head>
@@ -14,7 +11,10 @@ export default function RootLayout({ children }) {
             <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap" rel="stylesheet" />
 
       </head>
-      <body>{children}</body>
+
+      <body className="font-poppins">
+        {children}
+      </body>
     </html>
   )
 }

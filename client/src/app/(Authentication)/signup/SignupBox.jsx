@@ -95,7 +95,7 @@ export default function SignupBox() {
           Signup
         </button>
         {error && <p>{error}</p>}
-        <a className="text-[#00172d] text-[15px] self-end " href="/login">
+        <a className="text-[#00172d] text-[15px] self-start " href="/login">
           Already have an account?
         </a>
       </form>
