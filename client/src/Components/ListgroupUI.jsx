@@ -2,7 +2,7 @@ import React from "react";
 import Image from "next/image";
 export const ListgroupUI = ({ items }) => {
   return (
-    <div className="flex justify-center flex-col bg-white py-5 rounded-t-xl">
+    <div className="flex justify-center flex-col bg-white py-5 rounded-t-xl order-3">
       <div className="title ">
         <h1 className="text-2xl text-white p-2 px-5 font-semibold">Recent Expenses</h1>
       </div>
