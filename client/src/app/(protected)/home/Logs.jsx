@@ -1,4 +1,10 @@
     "use client";
+
+
+
+import { useUser } from "@/app/context/UserContext";
+import { db } from "@/app/firebase";
+import {collection , doc ,} from "firebase/firestore";    
     const categories = ["food","transport","entertainment","shopping","bills","other"];
     const friends = ["Adrian","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
     const friendsoptions = friends.map((friend) => {
@@ -7,16 +13,31 @@
             label: friend,
         }
     })
+    
+
 
     import { useState } from "react";
     import Select from "react-select";
     function Log () {
+        const {user} = useUser();
         const [log,setLog] = useState({});
         const [split,setSplit] = useState(false);
         const [displaySplit,setDisplaySplit] = useState(false);
         const [displayCategory,setDisplayCategory] = useState(false);
-        const [group,setGroup] = useState([]);
+        const [group,setGroup] = useState([[user.username,0]]);
 
+    
+    function checkSplit (){
+
+        let sum = 0;
+        for(let person of group){
+            sum += person[1];
+        }
+        if(sum === log.amount)
+            return true;
+        else return false;
+
+    }
     // const searchCategory = (category) => {
     //     const categories = ["food","transport","entertainment","shopping","bills","other"];
     //     return categories.filter((cat) => {
@@ -25,11 +46,40 @@
             
     //     })
     // }
+        const Owe = () => {
+
+            return (
+                <div className="flex flex-col gap-2 w-full">
+                {
+                    group.map((person,index) => {
+
+                        let peramount = person[1];
+                        return(
+                        <div className="flex flex-row w-full">
+                        <div className="w-[100px] text-center">{person[0]}</div>
+                        <input type="text"
+                                value={person[1]}
+                                onChange={(e) => {
+
+                                    setGroup([...group.slice(0,index),[person[0],e.target.value],...group.slice(index+1)]);
+                                }}
+
+
+                                
+                        />
+                        </div>
+                        )
+                }
+            )}
+                </div>
+            )
+        }
+                
         const [person,setPerson] = useState();
   
         const handleSubmit = (e) => {
             e.preventDefault();
-            console.log(log);
+            console.log(log,group);
         }
         return (
             <div className="flex flex-col gap-2 pt-5 pb-10">
@@ -87,7 +137,10 @@
                                 placeholder="Amount"
                                 value={log.amount}
                                 onChange={(e)=>{
-                                    setLog({...log, amount: e.target.value}) 
+                                    setLog({...log, amount: e.target.value})
+                                    for(let person of group){
+                                        person[1] = e.target.value/group.length;
+                                    }
                                 }} />
                 </div>
                 <div className= {`${displaySplit ? "flex flex-row" : "hidden"} gap-2 `}>
@@ -101,9 +154,11 @@
                             onChange={(e)=>{
                                 setPerson(e.value)                                    
                                 if(!group.includes(e.value)){
-                                    setGroup([...group,e.value])
+                                    const newItem = [e.value,0];
+                                    setGroup([...group,newItem])
                                     setPerson("");         
                                 }
+                                
                             }}
                             noOptionsMessage={() => "No matching friends"}
                             
@@ -112,14 +167,20 @@
                             return (
                                 <button key={i} className="flex pl-1 gap-3 justify-between bg-yellow-300 text-black rounded-3xl  px-[3px] items-center"
                                         onClick={(e)=>{
-                                            setGroup(group.filter((p)=>p!==person))
+                                            const newGroup = group.filter((item) => {
+                                                return item[0] !== person[0]
+                                            })
+                                            setGroup(newGroup);
                                         }
                                         }>
-                                    <p>{person}</p>
+                                    <p>{person[0]}</p>
                                     <p className=" px-[3px]" >x</p>
                                 </button>
                             )
                         })}
+
+                       
+     
                         {/* <input  placeholder="add person"
                                 list="friends"
                                 value={person}
@@ -144,6 +205,9 @@
                             )}
                         </datalist> */}
                          </div>
+                         <div className= {`${displaySplit ? "flex flex-col" : "hidden"} gap-2`}>
+                        <Owe />
+                        </div>
                 <div className="flex flex-row gap-4 gap-y-8 px-2">
                     <button>Add Details</button>
                     <button>add Photo</button>

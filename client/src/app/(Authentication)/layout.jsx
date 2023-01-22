@@ -1,18 +1,16 @@
 'use client';
 import { auth } from '../firebase';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { useEffect } from 'react';
 import{useRouter} from 'next/navigation';
 
+import { useUser } from '../context/UserContext';
+
 export default function RootLayout({ children }) {
+    const {user} = useUser();
+    console.log("user",user);
     const router = useRouter();
-    const [user,loading] = useAuthState(auth);
-    useEffect(() => {
-        if(loading) return;
-        if(user) router.push('/home');
-    },[user,loading])
+    if (user)  return router.push('/home');
     return (
-      <div>{(loading ) ? <div>Loading</div> : children}</div>
+      <div>{children}</div>
     )
   }
   

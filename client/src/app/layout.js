@@ -1,6 +1,7 @@
 'use client';
 import './global.css'
 import { useRouter } from 'next/navigation'
+import { UserProvider } from '@/app/context/UserContext';
 export default function RootLayout({ children }) {
 
   return (
@@ -12,8 +13,11 @@ export default function RootLayout({ children }) {
 
       </head>
 
+      
       <body className="font-poppins">
+        <UserProvider>
         {children}
+        </UserProvider>
       </body>
     </html>
   )

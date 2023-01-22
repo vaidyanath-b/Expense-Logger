@@ -3,7 +3,7 @@ import { auth } from "../../firebase";
 import { useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { signInWithEmailAndPassword } from "firebase/auth";
-
+import { useUser } from "@/app/context/UserContext";
 export default function SignupBox() {
   const [user, userLoading, erro] = useAuthState(auth);
 

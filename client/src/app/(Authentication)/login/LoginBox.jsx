@@ -2,8 +2,10 @@
 import {auth} from '../../firebase';
 import { signInWithEmailAndPassword } from "firebase/auth";
 import {useState} from 'react';
+import { useUser } from '@/app/context/UserContext';
 
 export default function Login() {
+    const {user,setUser} = useUser();
     const [email,setEmail] = useState('');
     const [password,setPassword] = useState('');
 

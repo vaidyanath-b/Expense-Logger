@@ -1,4 +1,4 @@
-
+import {auth} from '@/app/firebase';
 export default function NavBar(){
 
     return(
@@ -8,7 +8,6 @@ export default function NavBar(){
               className='bg-red-500 mr-4 p-1'
               onClick={(e)=>{
                 auth.signOut();
-                router.push('/login')
               }}>Logout</button>
         </div>
 
