@@ -4,7 +4,7 @@
 
 import { useUser } from "@/app/context/UserContext";
 import { db } from "@/app/firebase";
-import {collection , doc ,} from "firebase/firestore";    
+import {addDoc, collection , doc, runTransaction, Timestamp ,} from "firebase/firestore";    
     const categories = ["food","transport","entertainment","shopping","bills","other"];
     const friends = ["Adrian","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
     const friendsoptions = friends.map((friend) => {
@@ -24,16 +24,18 @@ import {collection , doc ,} from "firebase/firestore";
         const [split,setSplit] = useState(false);
         const [displaySplit,setDisplaySplit] = useState(false);
         const [displayCategory,setDisplayCategory] = useState(false);
-        const [group,setGroup] = useState([[user.username,0]]);
+        const [group,setGroup] = useState([{name:user.username,amount:0}]);
+        const [splitError,setSplitError] = useState(false);
+        const [splitEqual,setSplitEqual] = useState(true);
 
     
     function checkSplit (){
 
         let sum = 0;
         for(let person of group){
-            sum += person[1];
+            sum += parseInt(person.amount);
         }
-        if(sum === log.amount)
+        if(sum === parseInt(log.amount))
             return true;
         else return false;
 
@@ -50,23 +52,35 @@ import {collection , doc ,} from "firebase/firestore";
 
             return (
                 <div className="flex flex-col gap-2 w-full">
+                <input type="checkbox" name="splitequal" id="splitequal" 
+                checked={splitEqual} 
+                onChange={(e) => {
+                    setSplitEqual(e.target.checked);
+                    if(e.target.checked){
+                        let updatedGroup = [...group];
+                        updatedGroup.forEach((person) => {
+                            person.amount = log.amount/group.length;
+                        })
+                        setGroup(updatedGroup);
+                    }
+                }} />
                 {
                     group.map((person,index) => {
 
-                        let peramount = person[1];
                         return(
-                        <div className="flex flex-row w-full">
-                        <div className="w-[100px] text-center">{person[0]}</div>
+                        <div key={index} className="flex flex-row w-full">
+                        <div className="w-[100px] text-center">{person.name}</div>
                         <input type="text"
-                                value={person[1]}
-                                onChange={(e) => {
-
-                                    setGroup([...group.slice(0,index),[person[0],e.target.value],...group.slice(index+1)]);
-                                }}
-
-
-                                
+                        key={person.name}
+                        defaultValue={person.amount}
+                        onBlur={(e) => {
+                            let updatedGroup = [...group];
+                            updatedGroup[index].amount = (e.target.value);
+                            setGroup(updatedGroup);
+                            setSplitError(!checkSplit());
+                        }}
                         />
+
                         </div>
                         )
                 }
@@ -79,7 +93,88 @@ import {collection , doc ,} from "firebase/firestore";
   
         const handleSubmit = (e) => {
             e.preventDefault();
-            console.log(log,group);
+            const userRef = doc(db,"users",user.username);
+            const expenseRef = collection(db,"users",user.username,"expenses");
+            const userShareAmount = group.filter((person) => person.name === user.username)[0].amount;
+            
+            const logId = addDoc(expenseRef,{
+
+                paidBy : user.username,
+                date : log.date,
+                time : log.time,
+                title : log.title,
+                category : log.category,
+                amount : userShareAmount,
+                total_amount : parseFloat(log.amount),
+                split : split,
+            }
+                ).then((docRef) => {
+                    return docRef.id;
+                })
+            runTransaction(db, async (transaction) => {
+                const userDoc = await transaction.get(userRef);
+                if(!userDoc.exists()){
+                    throw "Document does not exist!";   
+                }
+                const totalExpense = userDoc.data().totalExpense;
+                const newTotalExpense = totalExpense + userShareAmount;
+                transaction.update(userRef,{
+                    totalExpense : newTotalExpense,
+                })
+                const owedMoney = userDoc.data().owedMoney;
+                const newOwedMoney = owedMoney + parseFloat(log.amount) - userShareAmount;
+                transaction.update(userRef,{
+                    owedMoney : newOwedMoney,
+                })
+                
+                //update money owed by each friend in group
+                if(split){  //didnt work
+                    for(let person of group){
+                        if(person.name != user.username){
+                            const friendRef = doc(db,"users",user.username,"friends",person.name);
+                            const friendDoc = await transaction.get(friendRef);
+                            const owedMoney = friendDoc.data().owedMoney;
+                            const newOwedMoney = owedMoney + parseFloat(person.amount);
+                            transaction.update(friendRef,{
+                                owedMoney : newOwedMoney,
+                            })
+                            
+                            const friendprofRef = doc(db,"users",person.name,"friends",user.username);
+                            const userDoc = await transaction.get(friendprofRef);
+                            const debt = userDoc.data().debt;
+                            const newDebt = debt + parseFloat(person.amount);
+                            transaction.update(friendprofRef,{
+                                debt : newDebt,
+                            })
+
+
+                        }
+
+                    }
+                }
+            })
+
+            if(split)
+                for(let person of group){
+                    if(person.name != user.username){
+                    addDoc(collection(db,"users",user.username,"expenses",logId,"group"),{
+                        name : person.name,
+                        amount : parseFloat(person.amount),
+                        paid: false,
+
+                    })
+                    
+                    addDoc(collection(db,"users",person.name,"debts"),{
+                        paidBy : user.username,
+                        logId : logId,
+                    })
+
+
+                }
+            }
+                
+
+           
         }
         return (
             <div className="flex flex-col gap-2 pt-5 pb-10">
@@ -97,7 +192,8 @@ import {collection , doc ,} from "firebase/firestore";
                             value={log.time}
                             onChange={(e) =>{
                                 setLog({...log, time: e.target.value })  
-                                                    }}                        className="px-1 text-[15px] " /> 
+                                                    }}
+                            className="px-1 text-[15px] " /> 
                 </div>
                 <input type="text" 
                         name="title"
@@ -133,15 +229,23 @@ import {collection , doc ,} from "firebase/firestore";
                    
                         </div>
                         <input type="text"
+                                className={`${splitError ? "border-2 border-red-500" :""}`}
                                 name="amount"
                                 placeholder="Amount"
                                 value={log.amount}
                                 onChange={(e)=>{
-                                    setLog({...log, amount: e.target.value})
+                                    setLog({...log, amount:(e.target.value)})
+                                    if(splitEqual)
                                     for(let person of group){
-                                        person[1] = e.target.value/group.length;
+                                        person.amount = (e.target.value)/group.length;
                                     }
-                                }} />
+                              
+                                }}
+                                onBlur={(e) => {
+                                    setSplitError(!checkSplit());
+                                }}  
+                                 />
+                                
                 </div>
                 <div className= {`${displaySplit ? "flex flex-row" : "hidden"} gap-2 `}>
                        
@@ -153,10 +257,8 @@ import {collection , doc ,} from "firebase/firestore";
                             value={person}
                             onChange={(e)=>{
                                 setPerson(e.value)                                    
-                                if(!group.includes(e.value)){
-                                    const newItem = [e.value,0];
-                                    setGroup([...group,newItem])
-                                    setPerson("");         
+                                if(!group.some((person) => person.name === e.value)){
+                                    setGroup([...group,{name:e.value,amount:0}])
                                 }
                                 
                             }}
@@ -167,13 +269,12 @@ import {collection , doc ,} from "firebase/firestore";
                             return (
                                 <button key={i} className="flex pl-1 gap-3 justify-between bg-yellow-300 text-black rounded-3xl  px-[3px] items-center"
                                         onClick={(e)=>{
-                                            const newGroup = group.filter((item) => {
-                                                return item[0] !== person[0]
-                                            })
+                                            const newGroup = [...group];
+                                            newGroup.splice(i,1);
                                             setGroup(newGroup);
                                         }
                                         }>
-                                    <p>{person[0]}</p>
+                                    <p>{person.name}</p>
                                     <p className=" px-[3px]" >x</p>
                                 </button>
                             )
@@ -217,6 +318,7 @@ import {collection , doc ,} from "firebase/firestore";
                 <button 
 
             className="bg-slate-700 px-1 text-green-300 ml-auto "
+            disabled={splitError || !log.title || !log.category || !log.amount} 
             onClick={handleSubmit}
                 >
                     Submit
@@ -237,7 +339,8 @@ import {collection , doc ,} from "firebase/firestore";
                 <div >
                     
                     <button className="mx-2 bg-slate-700 text-green-300"
-                            onClick={() => setLogs([...logs,{}])}
+                            onClick={() => setLogs([...logs,{
+                            }])}
                     > Add log +</button>
                 </div>
 
